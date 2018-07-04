@@ -3,25 +3,150 @@
 
 ---
 
+## TABLE SCHEMA
+
+**Customers (7 cols)**
+
++ CustomerID | CustomerName | ContactName | Address | City | PostalCode | Country
+
+**Suppliers (8 cols)**
+
++ SupplierID | SupplierName | ContactName | Address | City | PostalCode | Country | Phone
+
+**Orders (5 cols)**
+
++ OrderID | CustomerID | EmployeeID | OrderDate | ShipperID
+
+---
+
 ## 02 Part II. count(table) >= 2
 
-### 01 교집합
+### 01 공통된 Primary Key를 기준으로 외부 테이블의 칼럼 추가하기
 
-Q1. selects all customers that are from the same countries as the suppliers:
+NUM | Customers | Orders | diff
+--|---:|---:|--:
+TOTAL RECORDS | 91 | 196 | 105
+DISTINCT CustomerID | 91 | 74 | 17
+
+**Table1-1.** `concatenate`: Orders.ALL `and`: nothing
+
+```sql
+SELECT *
+FROM Orders
+ORDER BY CustomerID;
+
+--Number of Records: 196
+```
+
+**Table1-2.** `concatenate`: Orders.ALL `and`: Custmers.ALL `primaryKey`: CustomerID
+
+```sql
+SELECT *
+FROM Orders AS o, Customers AS c
+WHERE o.CustomerID=c.CustomerID
+ORDER BY o.CustomerID;
+
+--Number of Records: 196
+```
+
++ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
+
+**Table1-3.** `concatenate`: Orders.ALL `and`: Custmers.ALL `primaryKey`: CustomerID
+
+```sql
+SELECT *
+FROM Orders
+INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID
+ORDER BY CustomerID;
+
+--Number of Records: 196
+```
+
++ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
+
+**Table1-4.** `concatenate`: Orders.ALL `and`: Custmers.ALL `primaryKey`: CustomerID
+
+```sql
+SELECT *
+FROM Orders
+LEFT JOIN Customers ON Orders.CustomerID = Customers.CustomerID
+ORDER BY CustomerID;
+
+--Number of Records: 196
+```
+
++ Orders와 Customers 중 왼쪽 테이블을 기준으로,
++ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
+
+**Table1-5.** `concatenate`: Orders.ALL `and`: Customers.ALL `and`: Shippers.ALL `primaryKey`: CustomerID
+
+```sql
+SELECT *
+FROM ((Orders
+INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID)
+INNER JOIN Shippers ON Orders.ShipperID = Shippers.ShipperID)
+ORDER BY Orders.CustomerID;
+
+--Number of Records: 196
+```
+
++ step1: Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
++ step2: step1 테이블과 CustomerID가 겹치는 Shippers 행의 모든 칼럼을 step1 테이블에 추가한다.
+
+**Table1-6.** `concatenate`: Orders.ALL `and`: Customers.ALL `primaryKey`: CustomerID
+
+```sql
+SELECT *
+FROM Orders
+RIGHT JOIN Customers
+ON Orders.CustomerID = Customers.CustomerID
+ORDER BY Orders.CustomerID;
+
+--Number of Records: 213
+```
+
++ Orders와 Customers 중 오른쪽 테이블을 기준으로,
++ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
++ Orders에 없는 CustomerID가 추가된다.
+
+---
+
+```sql
+SELECT *
+FROM Customers AS c, Orders AS o
+WHERE c.CustomerID=o.CustomerID
+ORDER BY c.CustomerID;
+```
+
+Q. `fixed`: Customers.ALL `where`: Customers.Country = Suppliers.Country
 
 ```sql
 SELECT * FROM Customers
 WHERE Country IN (SELECT Country FROM Suppliers);
+
+--result_set : 65
 ```
 
-### 02 일치 
+### 02 추가
+
+Q. `fixed`: Customers.ALL `added`: Suppliers.ALL `condition`: Customers.Country = Suppliers.Country
 
 ```sql
-SELECT c.CustomerID, c.CustomerName, o.OrderID, o.OrderDate
-FROM Customers AS c, Orders AS o
-WHERE c.CustomerID=o.CustomerID
-ORDER BY c.CustomerID, o.OrderID;
+SELECT * FROM Customers
+INNER JOIN Suppliers ON Customers.Country = Suppliers.Country;
+
+--result_set : 165
 ```
+
+Q. `fixed`: Orders.ALL `added`: Customers.ALL `condition`: Orders.CustomerID = Customers.CustomerID
+
+```sql
+SELECT * FROM Orders
+INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;
+```
+
+### 02 일치 by records
+
 
 
 ---
@@ -67,6 +192,8 @@ FROM Customers;
 
 
 ### 02 WHERE, IN
+
+> **Note**: The WHERE clause is used to extract only those **records** that fulfill a specified condition.
 
 Q3. selects all the customers from the country "Mexico", in the "Customers" table
 
