@@ -19,8 +19,6 @@
 
 ---
 
-## 02 Part II. count(table) >= 2
-
 ### 01 공통된 Primary Key를 기준으로 외부 테이블의 칼럼 추가하기
 
 NUM | Customers | Orders | diff
@@ -28,7 +26,7 @@ NUM | Customers | Orders | diff
 TOTAL RECORDS | 91 | 196 | 105
 DISTINCT CustomerID | 91 | 74 | 17
 
-**Table1-1.** `concatenate`: Orders.ALL `and`: nothing
+**Table1-1.** 테이블1
 
 ```sql
 SELECT *
@@ -38,7 +36,7 @@ ORDER BY CustomerID;
 --Number of Records: 196
 ```
 
-**Table1-2.** `concatenate`: Orders.ALL `and`: Custmers.ALL `primaryKey`: CustomerID
+**Table1-2.** 테이블1 + 테이블2 `where(primaryKey)`
 
 ```sql
 SELECT *
@@ -49,9 +47,11 @@ ORDER BY o.CustomerID;
 --Number of Records: 196
 ```
 
-+ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
++ primaryKey가 겹치는 테이블1과 테이블2의 로우만 걸러내서 모든 칼럼을 함께 보여준다.
 
-**Table1-3.** `concatenate`: Orders.ALL `and`: Custmers.ALL `primaryKey`: CustomerID
+---
+
+**Table1-3.** 테이블1 + `intersection(테이블1, 테이블2, primaryKey)`
 
 ```sql
 SELECT *
@@ -62,9 +62,10 @@ ORDER BY CustomerID;
 --Number of Records: 196
 ```
 
-+ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
++ step1: primaryKey 기준으로 테이블1과 테이블2의 교집합(INNER) 로우를 찾는다.
++ step2: 교집합된 테이블2의 로우와 칼럼을 테이블1에 조인한다.
 
-**Table1-4.** `concatenate`: Orders.ALL `and`: Custmers.ALL `primaryKey`: CustomerID
+**Table1-4.** 테이블1 + `left(테이블1, 테이블2, primaryKey)`
 
 ```sql
 SELECT *
@@ -75,10 +76,12 @@ ORDER BY CustomerID;
 --Number of Records: 196
 ```
 
-+ Orders와 Customers 중 왼쪽 테이블을 기준으로,
-+ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
++ step1: primaryKey 기준으로 테이블1과 테이블2의 교집합 로우를 찾는다.
++ step2: 왼쪽(LEFT) 테이블에 있는 모든 로우를 뱉어내야 한다.
++ step3: 교집합된 테이블2의 로우와 칼럼을 왼쪽 테이블1에 조인한다.
++ step4: 교집합되지 않은 왼쪽(LEFT) 테이블의 로우 또한 테이블1에 조인한다.
 
-**Table1-5.** `concatenate`: Orders.ALL `and`: Customers.ALL `and`: Shippers.ALL `primaryKey`: CustomerID
+**Table1-5.** 테이블1 + `intersection(테이블1+테이블2, 테이블3, primaryKey)`
 
 ```sql
 SELECT *
@@ -90,42 +93,32 @@ ORDER BY Orders.CustomerID;
 --Number of Records: 196
 ```
 
-+ step1: Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
-+ step2: step1 테이블과 CustomerID가 겹치는 Shippers 행의 모든 칼럼을 step1 테이블에 추가한다.
++ step1: primaryKey 기준으로 테이블1과 테이블 2의 교집합(INNER) 로우를 찾는다.
++ step2: 교집합된 테이블2의 로우와 칼럼을 테이블1에 조인한다.
++ step3: primaryKey 기준으로 step2 테이블과 테이블3의 교집합(INNER) 로우를 찾는다.
++ step4: 교집합된 테이블3의 로우와 칼럼을 step2 테이블에 조인한다.
 
-**Table1-6.** `concatenate`: Orders.ALL `and`: Customers.ALL `primaryKey`: CustomerID
+**Table1-6.** 테이블1 + `right(테이블1, 테이블2, primaryKey)`
 
 ```sql
 SELECT *
 FROM Orders
-RIGHT JOIN Customers
-ON Orders.CustomerID = Customers.CustomerID
+RIGHT JOIN Customers ON Orders.CustomerID = Customers.CustomerID
 ORDER BY Orders.CustomerID;
 
 --Number of Records: 213
 ```
 
-+ Orders와 Customers 중 오른쪽 테이블을 기준으로,
-+ Orders와 CustomerID가 겹치는 Customers 행의 모든 칼럼을 Orders에 추가한다.
-+ Orders에 없는 CustomerID가 추가된다.
++ step1: primaryKey 기준으로 테이블1과 테이블2의 교집합 로우를 찾는다.
++ step2: 오른쪽(RIGHT) 테이블에 있는 모든 로우를 뱉어내야 한다.
++ step3: 교집합된 테이블2의 로우와 칼럼을 오른쪽 테이블1에 조인한다.
++ step4: 교집합되지 않은 오른쪽(RIGHT) 테이블의 로우 또한 테이블1에 조인한다.
+
+@@@TODO. SELF JOIN
 
 ---
-
-```sql
-SELECT *
-FROM Customers AS c, Orders AS o
-WHERE c.CustomerID=o.CustomerID
-ORDER BY c.CustomerID;
-```
-
-Q. `fixed`: Customers.ALL `where`: Customers.Country = Suppliers.Country
-
-```sql
-SELECT * FROM Customers
-WHERE Country IN (SELECT Country FROM Suppliers);
-
---result_set : 65
-```
+---
+---
 
 ### 02 추가
 
@@ -147,11 +140,9 @@ INNER JOIN Customers ON Orders.CustomerID = Customers.CustomerID;
 
 ### 02 일치 by records
 
-
-
 ---
 
-## 01 Part I. count(table) == 1
+# 01 Part I. count(table) == 1
 
 ### 01 Combine columns
 
@@ -171,8 +162,11 @@ FROM Customers;
 
 ---
 ---
+---
+---
+---
 
-## 00 Part 0. Basic Syntax
+# 00 Part 0. Basic Syntax
 
 ### 01 SELECT DISTINCT
 
